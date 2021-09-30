@@ -1,0 +1,114 @@
+<html>
+<head>
+    <title> My egg Falling Game </title>
+</head>
+
+<body>
+<canvas id="myCanvas" width=300 height=300 style="background:url('../img/background.png'); background-size: cover">
+</canvas>
+
+
+<script>
+
+    let ctx = document.getElementById('myCanvas').getContext("2d");
+    let basket_x = 0;
+    let basket_y = 0;
+    let basketImg = new Image();
+    basketImg.src = "../img/basket.png";         // The basket
+
+    let egg_x = 0;
+    let egg_y = 0;
+    let eggImg = new Image();
+    eggImg.src = "../img/egg.png";  // The egg
+
+    let score = 0;
+    let egg_speed = 5;
+    let FPS = 40;                        // How many frames per second
+    let time_remaining = 20;
+
+
+    function restart_game() {
+        // This gets called when the 'S' key is pressed and just sets
+        // some important letiables back to the start.
+        //
+        // Alternatively they could just reload the page
+        time_remaining = 20;
+        score = 0;
+        egg_speed = 5;
+    }
+
+    function ImagesTouching(x1, y1, img1, x2, y2, img2) {
+        //
+        // This function detects whether two images are touching - very useful function
+        //
+        if (x1 >= x2 + img2.width || x1 + img1.width <= x2)
+            return false;                                              // too far to the side
+        if (y1 >= y2 + img2.height || y1 + img1.height <= y2)
+            return false;                                              // too far above/below
+        return true;                                                    // otherwise, overlap
+    }
+
+
+    function Do_a_Frame() {
+        ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);                 // clear the background
+
+        ctx.fillStyle = "purple";
+        ctx.font = "20px Arial";
+        ctx.fillText("Score: " + score, 0, 20);                               // display the score
+
+
+        basket_y = myCanvas.height - basketImg.height;                              // ensure basket always at bottom of canvas
+        ctx.drawImage(basketImg, basket_x, basket_y);                                  // and draw it
+
+        ctx.fillText("Time Remaining: " + Math.round(time_remaining), 0, 45); // display time remaining
+
+        if (time_remaining <= 0) {                                            // if the time has run out
+            ctx.fillStyle = "red";
+            ctx.font = "bold 50px Arial";                                   // say so
+            ctx.textAlign = "center";
+            ctx.fillText("Game Over", myCanvas.width / 2, myCanvas.height / 2);
+            ctx.font = "bold 20px Arial";
+            ctx.fillText("Press Enter to play again", myCanvas.width / 2, (myCanvas.height / 2) + 50);
+            ctx.textAlign = "left";
+        } else {
+            time_remaining = time_remaining - 1 / FPS;                        // otherwise tick the time down
+
+            egg_y = egg_y + egg_speed;                                // move the egg down the screen
+
+            if (egg_y > myCanvas.height) {                                // if it's gone past the bottom
+                egg_y = 0;                                                 // move it back to the top
+                egg_x = Math.random() * (myCanvas.width - eggImg.width); // pick a random x-position, always fully visible
+            }
+        }
+
+        ctx.drawImage(eggImg, egg_x, egg_y);                            // draw the egg
+
+        if (ImagesTouching(basket_x, basket_y, basketImg, egg_x, egg_y, eggImg)) {  // check for touching
+            score = score + 1;                                                    // add one to score
+            egg_speed = egg_speed + 0.5;                                     // and make it fall a bit faster
+            egg_x = -eggImg.width;                                            // hide the egg so the score doesn't rocket
+        }
+    }
+
+    setInterval(Do_a_Frame, 1000 / FPS);                                          // Call our frame renderer every this many milliseconds
+
+
+    function MyKeyDownHandler(MyEvent) {
+        if (MyEvent.keyCode === 37 && basket_x > 0) {
+            basket_x = basket_x - 10;
+        }                          // left
+        if (MyEvent.keyCode === 39 && basket_x + basketImg.width < myCanvas.width) {
+            basket_x = basket_x + 10;
+        }  // right
+        if (MyEvent.keyCode === 13) restart_game();                                             // S to restart
+        MyEvent.preventDefault();
+    }
+
+    addEventListener("keydown", MyKeyDownHandler);                      // listen for keystrokes
+
+    myCanvas.width = window.innerWidth - 20;                            // fill the entire browser width
+    myCanvas.height = window.innerHeight - 20;                          // fill the entire browser height
+
+</script>
+</body>
+</html>
